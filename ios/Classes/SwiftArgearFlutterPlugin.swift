@@ -68,18 +68,14 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
             apiSecretKey = (dict["apiSecretKey"] as? String ?? "")
             apiAuthKey = (dict["apiAuthKey"] as? String ?? "")
         }
-        setupARGearConfig()
-        setupScene()
-        setupCamera()
-        setupUI()
-        
-        runARGSession()
-        initHelpers()
-        connectAPI()
 
         channel.setMethodCallHandler { [weak self] call, result in
             guard let self = self else { return }
             
+						if call.method == "setUp" {
+                self.setUp()
+                result("ok")
+            }
             if call.method == "clearFilter" {
                 ContentManager.shared.clearContent()
                 result("ok")
@@ -110,9 +106,11 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
               result("ok")
             }
         }
+				print("yukimat end init")
     }
 
     func view() -> UIView {
+			  print("yukimat return view")
         return _view
     }
     
@@ -130,6 +128,17 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
     private var arCamera: ARGCamera!
     private var arMedia: ARGMedia = ARGMedia()
     
+		private func setUp() {
+        setupARGearConfig()
+        setupScene()
+        setupCamera()
+        setupUI()
+        
+        runARGSession()
+        initHelpers()
+        connectAPI()
+				self.channel.invokeMethod("onSetUpComplete", arguments: [])
+    }
     private func runARGSession() {
         argSession?.run()
     }

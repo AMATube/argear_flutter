@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 typedef ARGearCallback = void Function(ARGearController controller);
 typedef OnVideoRecorded = void Function(String path);
+typedef OnSetUpCompleted = void Function();
 
 const channelName = 'plugins.flutter.io/argear_flutter';
 
@@ -12,29 +13,28 @@ class ARGearPreview extends StatefulWidget {
     Key? key,
     required this.argearCallback,
     required this.onVideoRecorded,
+    required this.onSetUpCompleted,
     required this.defaultFilterItemId,
     required this.apiHost,
     required this.apiKey,
     required this.apiSecretKey,
     required this.apiAuthKey,
-    required this.loadingWidget,
   }) : super(key: key);
 
   final ARGearCallback argearCallback;
   final OnVideoRecorded onVideoRecorded;
+  final OnSetUpCompleted onSetUpCompleted;
   final String defaultFilterItemId;
   final String apiHost;
   final String apiKey;
   final String apiSecretKey;
   final String apiAuthKey;
-  final Widget loadingWidget;
 
   @override
   createState() => _ARGearState();
 }
 
 class _ARGearState extends State<ARGearPreview> {
-  var loading = true;
   // ignore: unused_field
   late ARGearController _controller;
 
@@ -42,13 +42,15 @@ class _ARGearState extends State<ARGearPreview> {
     final controller = await ARGearController.init(id, this);
     widget.argearCallback(controller);
     _controller = controller;
-    setState(() {
-      loading = false;
-    });
+    await controller.setUp();
   }
 
   void onVideoRecorded(String path) {
     widget.onVideoRecorded(path);
+  }
+
+  void onSetUpCompleted() {
+    widget.onSetUpCompleted();
   }
 
   @override
@@ -67,16 +69,11 @@ class _ARGearState extends State<ARGearPreview> {
       'apiAuthKey': widget.apiAuthKey,
     };
 
-    return Stack(
-      children: [
-        UiKitView(
-          viewType: channelName,
-          onPlatformViewCreated: _onPlatformViewCreated,
-          creationParams: args,
-          creationParamsCodec: const StandardMessageCodec(),
-        ),
-        if (loading) widget.loadingWidget
-      ],
+    return UiKitView(
+      viewType: channelName,
+      onPlatformViewCreated: _onPlatformViewCreated,
+      creationParams: args,
+      creationParamsCodec: const StandardMessageCodec(),
     );
   }
 }
@@ -103,9 +100,16 @@ class ARGearController {
         }
         _argState.onVideoRecorded(video);
         break;
+      case 'onSetUpComplete':
+        _argState.onSetUpCompleted();
+        break;
       default:
         throw MissingPluginException();
     }
+  }
+
+  Future<void> setUp() async {
+    channel.invokeMethod<void>('setUp');
   }
 
   Future<void> addFilter() async {

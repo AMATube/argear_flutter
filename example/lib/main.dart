@@ -29,9 +29,9 @@ class Home extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    useEffect(() {
-      return () => argearController?.destroySession();
-    }, []);
+    final loadingState = useState(true);
+    print('start build');
+
     return Scaffold(
       body: Stack(children: [
         ARGearPreview(
@@ -40,7 +40,9 @@ class Home extends HookWidget {
           apiKey: apiKey,
           apiSecretKey: apiSecretKey,
           apiAuthKey: apiAuthKey,
-          loadingWidget: const Center(child: Text('....loading')),
+          onSetUpCompleted: () {
+            loadingState.value = false;
+          },
           onVideoRecorded: (path) {
             Navigator.of(context).push(
               MaterialPageRoute<PreviewPage>(
@@ -54,35 +56,52 @@ class Home extends HookWidget {
             argearController = c;
           },
         ),
-        Column(
-          children: [
-            TextButton(
-              onPressed: () {
-                argearController?.clearFilter();
-              },
-              child: const Text('フィルター削除'),
-            ),
-            TextButton(
-              onPressed: () {
-                argearController?.addFilter();
-              },
-              child: const Text('フィルター追加'),
-            ),
-            TextButton(
-              onPressed: () {
-                argearController?.startVideoRecording();
-              },
-              child: const Text('録画開始'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await argearController?.stopVideoRecording();
-              },
-              child: const Text('録画終了'),
-            ),
-          ],
-        )
+        if (loadingState.value) const Spinner(),
+        if (!loadingState.value)
+          Column(
+            children: [
+              TextButton(
+                onPressed: () {
+                  argearController?.clearFilter();
+                },
+                child: const Text('フィルター削除'),
+              ),
+              TextButton(
+                onPressed: () {
+                  argearController?.addFilter();
+                },
+                child: const Text('フィルター追加'),
+              ),
+              TextButton(
+                onPressed: () {
+                  argearController?.startVideoRecording();
+                },
+                child: const Text('録画開始'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await argearController?.stopVideoRecording();
+                },
+                child: const Text('録画終了'),
+              ),
+            ],
+          )
       ]),
+    );
+  }
+}
+
+class Spinner extends StatelessWidget {
+  const Spinner({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(top: 24),
+      child: Align(
+        alignment: Alignment.center,
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
