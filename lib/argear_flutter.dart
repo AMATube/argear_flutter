@@ -48,7 +48,7 @@ class _ARGearState extends State<ARGearPreview> {
   @override
   void dispose() {
     super.dispose();
-    _controller.destroySession();
+    // _controller.destroySession();
   }
 
   @override
