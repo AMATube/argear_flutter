@@ -32,7 +32,7 @@ class BeautyManager {
             else { return }
         
         contents.setBulge(.NONE)
-        contents.setDefaultBeauty()
+				self.setDefault()
     }
     
     public func setDefault() {
@@ -40,6 +40,9 @@ class BeautyManager {
             else { return }
         
         contents.setDefaultBeauty()
+				contents.setBeauty(.skinFace, value: 90)
+				contents.setBeauty(.lipSize, value: 0)
+				contents.setBeauty(.faceSlim, value: 50)
     }
     
     public func off() {

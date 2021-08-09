@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 
 typedef ARGearCallback = void Function(ARGearController controller);
 typedef OnVideoRecorded = void Function(String path);
@@ -107,6 +110,15 @@ class ARGearController {
       case 'onSetUpComplete':
         _argState.onSetUpCompleted();
         break;
+      case 'onDownloadItemComplete':
+        final fileName = call.arguments['zipFileName'] as String?;
+        if (fileName != null) {
+          final cacheDir = await getTemporaryDirectory();
+          final itemPath = '${cacheDir.path}/$fileName';
+          channel.invokeMethod<void>('addFilter',
+              {'cacheFilePath': itemPath, 'itemId': fileName.split('.')[0]});
+        }
+        break;
       default:
         throw MissingPluginException();
     }
@@ -116,12 +128,28 @@ class ARGearController {
     channel.invokeMethod<void>('setUp');
   }
 
-  Future<void> addFilter() async {
-    channel.invokeMethod<void>('addFilter');
+  Future<void> addFilter(String itemId) async {
+    final cacheDir = await getTemporaryDirectory();
+    final itemPath = '${cacheDir.path}/$itemId.zip';
+    final isExists = File(itemPath).existsSync();
+    if (isExists) {
+      channel.invokeMethod<void>(
+          'addFilter', {'cacheFilePath': itemPath, 'itemId': itemId});
+    } else {
+      await channel.invokeMethod<String?>('downloadItem');
+    }
   }
 
   Future<void> clearFilter() async {
     channel.invokeMethod<void>('clearFilter');
+  }
+
+  Future<void> clearBeauty() async {
+    channel.invokeMethod<void>('clearBeauty');
+  }
+
+  Future<void> addBeauty() async {
+    channel.invokeMethod<void>('addBeauty');
   }
 
   Future<void> startVideoRecording() async {

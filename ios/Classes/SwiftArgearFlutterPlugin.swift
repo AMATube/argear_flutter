@@ -8,7 +8,6 @@ import Foundation
 
 public class SwiftArgearFlutterPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
-        RealmManager.shared.checkAndMigration()
         registrar.register(ARGearViewFactory(messenger: registrar.messenger()), withId: "plugins.flutter.io/argear_flutter")
     }
 }
@@ -72,17 +71,21 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         channel.setMethodCallHandler { [weak self] call, result in
             guard let self = self else { return }
             
-						if call.method == "setUp" {
+            if call.method == "setUp" {
                 self.setUp()
                 result("ok")
             }
             if call.method == "clearFilter" {
-                ContentManager.shared.clearContent()
+                self.argSession?.contents?.clear(.sticker)
                 result("ok")
             }
             if call.method == "addFilter" {
-                self.setContents(itemId: self.defaultFilterItemId)
-                result("ok")
+							if let args = call.arguments as? [String: Any],
+                  let cacheFilePath = args["cacheFilePath"] as? String,
+                  let itemId = args["itemId"] as? String {
+                  self.setContents(cacheFilePath: cacheFilePath, itemId: itemId)
+							}
+              result("ok")
             }
             if call.method == "clearBeauty" {
                 BeautyManager.shared.off()
@@ -100,8 +103,11 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
                 self.stopVideoRecording()
                 result("ok")
             }
+            if call.method == "downloadItem" {
+                self.downloadItem()
+                result("ok")
+            }
             if call.method == "destroy" {
-              print("session destroy")
               self.argSession?.destroy()
               result("ok")
             }
@@ -126,49 +132,71 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
     private var arCamera: ARGCamera!
     private var arMedia: ARGMedia = ARGMedia()
     
-		private func setUp() {
+    private func setUp() {
         setupARGearConfig()
         setupScene()
         setupCamera()
-        setupUI()
         
-        runARGSession()
-        initHelpers()
-        connectAPI()
-				self.channel.invokeMethod("onSetUpComplete", arguments: [])
-    }
-    private func runARGSession() {
         argSession?.run()
-    }
-
-    private func initHelpers() {
-        NetworkManager.shared.argSession = self.argSession
-        NetworkManager.shared.apiHost = self.apiHost
-        NetworkManager.shared.apiKey = self.apiKey
         BeautyManager.shared.argSession = self.argSession
-        ContentManager.shared.argSession = self.argSession
-        
         BeautyManager.shared.start()
+        self.channel.invokeMethod("onSetUpComplete", arguments: [])
     }
 
-    // MARK: - connect argear API
-    private func connectAPI() {
-        NetworkManager.shared.connectAPI { (result: Result<[String: Any], APIError>) in
-            switch result {
-            case .success(let data):
-                RealmManager.shared.setARGearData(data)
-            default:
-                break
-            }
-        }
-    }
+    private func downloadItem() {
+      guard let session = self.argSession, let auth = session.auth
+          else { return }
+
+      let authCallback : ARGAuthCallback = {(url: String?, code: ARGStatusCode) in
+          if (code.rawValue == ARGStatusCode.SUCCESS.rawValue) {
+              guard let url = url else { return }
+
+              let authUrl = URL(string: url)!
+              let task = URLSession.shared.downloadTask(with: authUrl) { (downloadUrl, response, error) in
+                  if error != nil {
+                      return
+                  }
+
+                  guard
+                      let httpResponse = response as? HTTPURLResponse,
+                      let response = response,
+                      let downloadUrl = downloadUrl
+                      else { return }
+
+                  if httpResponse.statusCode == 200 {
+                      guard
+                          var cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .allDomainsMask).first,
+                          let suggestedFilename = response.suggestedFilename
+                          else { return }
+                      cachesDirectory.appendPathComponent(suggestedFilename)
+
+                      let fileManager = FileManager.default
+                      // remove
+                      do {
+                          try fileManager.removeItem(at: cachesDirectory)
+                      } catch {
+                      }
+                      // copy
+                      do {
+                          try fileManager.copyItem(at: downloadUrl, to: cachesDirectory)
+                      } catch {
+                          return
+                      }
+											self.channel.invokeMethod("onDownloadItemComplete", arguments: ["zipFileName": suggestedFilename])
+                  }
+              }
+              task.resume()
+          } else {
+            return
+          }
+      }
+      let zipUrl = "https://privatecontent.argear.io/contents/data/" + self.defaultFilterItemId + ".zip";
+
+      auth.requestSignedUrl(withUrl: zipUrl, itemTitle: "Budapest", itemType: "filter", completion: authCallback)
+  }
     
-    private func setContents(itemId: String?) {
-        if let item = RealmManager.shared.getCategories().first?.items.first(where: {$0.uuid == itemId}) {
-            ContentManager.shared.setContent(item, successBlock: {}) {}
-        } else {
-          return
-        }
+    private func setContents(cacheFilePath: String, itemId: String) {
+        self.argSession?.contents?.setItemWith(.sticker, withItemFilePath: cacheFilePath, withItemID: itemId)
     }
     
     // MARK: - ARGearSDK setupConfig
@@ -222,7 +250,7 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         let height11: CGFloat = self._view.frame.width
         var previewY: CGFloat = 0
         if self.arCamera.ratio == ._1x1 {
-            previewY = (height43 - height11)/2 + CGFloat(kRatioViewTopBottomAlign11/2)
+            previewY = (height43 - height11)/2 + CGFloat(32)
         }
         
         if #available(iOS 11.0, *), self.arCamera.ratio != ._16x9 {
@@ -310,11 +338,6 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         arMedia.setVideoBitrate(._4M)
     }
     
-    // MARK: - UI
-    private func setupUI() {
-        ARGLoading.prepare()
-    }
-
     private func startVideoRecording() {
       self.arMedia.recordVideoStart { sec in }
     }

@@ -77,9 +77,21 @@ class Home extends HookWidget {
               ),
               TextButton(
                 onPressed: () {
-                  argearController?.addFilter();
+                  argearController?.addFilter(defaultFilterItemId);
                 },
                 child: const Text('フィルター追加'),
+              ),
+              TextButton(
+                onPressed: () {
+                  argearController?.clearBeauty();
+                },
+                child: const Text('ビューティー削除'),
+              ),
+              TextButton(
+                onPressed: () {
+                  argearController?.addBeauty();
+                },
+                child: const Text('ビューティー追加'),
               ),
               TextButton(
                 onPressed: () {
