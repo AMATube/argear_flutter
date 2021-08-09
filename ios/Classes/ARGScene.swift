@@ -16,7 +16,7 @@ class ARGScene: NSObject {
     init(viewContainer: UIView?){
         super.init()
 
-        guard let url: URL = Bundle(for: SwiftSamplePlugin.self).url(forResource: "face", withExtension: "scn") else { fatalError("Failed to load face scene!") }
+        guard let url: URL = Bundle(for: SwiftArgearFlutterPlugin.self).url(forResource: "face", withExtension: "scn") else { fatalError("Failed to load face scene!") }
     
         do {
             let scene = try SCNScene(url: url)

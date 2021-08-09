@@ -7,10 +7,10 @@ import ARGear
 import Foundation
 
 public class SwiftArgearFlutterPlugin: NSObject, FlutterPlugin {
-  public static func register(with registrar: FlutterPluginRegistrar) {
-    RealmManager.shared.checkAndMigration()
-    registrar.register(ARGearViewFactory(messenger: registrar.messenger()), withId: "plugins.flutter.io/argear_flutter")
-  }
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        RealmManager.shared.checkAndMigration()
+        registrar.register(ARGearViewFactory(messenger: registrar.messenger()), withId: "plugins.flutter.io/argear_flutter")
+    }
 }
 
 class ARGearViewFactory: NSObject, FlutterPlatformViewFactory {
@@ -31,7 +31,7 @@ class ARGearViewFactory: NSObject, FlutterPlatformViewFactory {
             arguments: args,
             binaryMessenger: messenger)
     }
-		public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
         return FlutterStandardMessageCodec.sharedInstance()
     }
 }
@@ -40,11 +40,11 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
     private var _view: UIView!
     
     let channel: FlutterMethodChannel
-		var defaultFilterItemId: String
-		var apiHost: String
-		var apiKey: String
-		var apiSecretKey: String
-		var apiAuthKey: String
+    var defaultFilterItemId: String
+    var apiHost: String
+    var apiKey: String
+    var apiSecretKey: String
+    var apiAuthKey: String
     
     init(
         frame: CGRect,
@@ -54,18 +54,19 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
     ) {
         channel = FlutterMethodChannel(name: "plugins.flutter.io/argear_flutter/\(viewId)", binaryMessenger: messenger)
         _view = UIView(frame: CGRect(x: 0, y: 0, width: 375.0, height: 667.0))
-				defaultFilterItemId = ""
+        defaultFilterItemId = ""
         apiHost = ""
         apiKey = ""
         apiSecretKey = ""
         apiAuthKey = ""
 
         super.init()
-				if let dict = args as? [String: Any] {
+        if let dict = args as? [String: Any] {
             defaultFilterItemId = (dict["defaultFilterItemId"] as? String ?? "")
+            apiHost = (dict["apiHost"] as? String ?? "")
             apiKey = (dict["apiKey"] as? String ?? "")
-						apiSecretKey = (dict["apiSecretKey"] as? String ?? "")
-						apiAuthKey = (dict["apiAuthKey"] as? String ?? "")
+            apiSecretKey = (dict["apiSecretKey"] as? String ?? "")
+            apiAuthKey = (dict["apiAuthKey"] as? String ?? "")
         }
         setupARGearConfig()
         setupScene()
@@ -73,43 +74,41 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         setupUI()
         
         runARGSession()
-				initHelpers()
-				connectAPI()
-        setContents(itemId: defaultFilterItemId)
-
+        initHelpers()
+        connectAPI()
 
         channel.setMethodCallHandler { [weak self] call, result in
             guard let self = self else { return }
             
             if call.method == "clearFilter" {
                 ContentManager.shared.clearContent()
-                result()
+                result("ok")
             }
             if call.method == "addFilter" {
                 self.setContents(itemId: self.defaultFilterItemId)
-                result()
+                result("ok")
             }
-						if call.method == "clearBeauty" {
+            if call.method == "clearBeauty" {
                 BeautyManager.shared.off()
-                result()
+                result("ok")
             }
-						if call.method == "addBeauty" {
+            if call.method == "addBeauty" {
                 BeautyManager.shared.setDefault()
-                result()
+                result("ok")
             }
-						if call.method == "startVideoRecording" {
-							self.startVideoRecording()
-              result()
-						}
-						if call.method == "stopVideoRecording" {
-							self.stopVideoRecording()
-              result()
-						}
-						if call.method == "destroy" {
-							print("session destroy")
-							self.argSession?.destroy()
-              result()
-						}
+            if call.method == "startVideoRecording" {
+                self.startVideoRecording()
+                result("ok")
+            }
+            if call.method == "stopVideoRecording" {
+                self.stopVideoRecording()
+                result("ok")
+            }
+            if call.method == "destroy" {
+              print("session destroy")
+              self.argSession?.destroy()
+              result("ok")
+            }
         }
     }
 
@@ -135,7 +134,7 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         argSession?.run()
     }
 
-		private func initHelpers() {
+    private func initHelpers() {
         NetworkManager.shared.argSession = self.argSession
         NetworkManager.shared.apiHost = self.apiHost
         NetworkManager.shared.apiKey = self.apiKey
@@ -145,23 +144,23 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         BeautyManager.shared.start()
     }
 
-		// MARK: - connect argear API
+    // MARK: - connect argear API
     private func connectAPI() {
         NetworkManager.shared.connectAPI { (result: Result<[String: Any], APIError>) in
             switch result {
             case .success(let data):
                 RealmManager.shared.setARGearData(data)
-						default:
+            default:
                 break
             }
         }
     }
     
     private func setContents(itemId: String?) {
-				if let item = RealmManager.shared.getCategories().first?.items.first(where: {$0.uuid == itemId}) {
+        if let item = RealmManager.shared.getCategories().first?.items.first(where: {$0.uuid == itemId}) {
             ContentManager.shared.setContent(item, successBlock: {}) {}
         } else {
-					return
+          return
         }
     }
     
@@ -309,19 +308,19 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
         ARGLoading.prepare()
     }
 
-		private func startVideoRecording() {
-			self.arMedia.recordVideoStart { sec in }
-		}
+    private func startVideoRecording() {
+      self.arMedia.recordVideoStart { sec in }
+    }
 
-		private func stopVideoRecording() {
-			self.arMedia.recordVideoStop({ videoInfo in
+    private func stopVideoRecording() {
+      self.arMedia.recordVideoStop({ videoInfo in
       }) { resultVideoInfo in
           if let info = resultVideoInfo as? Dictionary<String, Any> {
             let url = info["filePath"] as? NSURL;
             self.channel.invokeMethod("onVideoRecordingComplete", arguments: ["video": url?.absoluteString])
           }
       }
-		}
+    }
     
     func didUpdate(_ arFrame: ARGFrame) {
         self.drawARCameraPreview()

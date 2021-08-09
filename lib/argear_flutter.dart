@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 typedef ARGearCallback = void Function(ARGearController controller);
 typedef OnVideoRecorded = void Function(String path);
 
+const channelName = 'plugins.flutter.io/argear_flutter';
+
 class ARGearPreview extends StatefulWidget {
   const ARGearPreview({
     Key? key,
@@ -64,7 +66,7 @@ class _ARGearState extends State<ARGearPreview> {
     };
 
     return UiKitView(
-      viewType: 'my_first_view',
+      viewType: channelName,
       onPlatformViewCreated: _onPlatformViewCreated,
       creationParams: args,
       creationParamsCodec: const StandardMessageCodec(),
@@ -81,7 +83,7 @@ class ARGearController {
   final _ARGearState _argState;
 
   static Future<ARGearController> init(int id, _ARGearState _argState) async {
-    final channel = MethodChannel('my_first_view/$id');
+    final channel = MethodChannel('$channelName/$id');
     return ARGearController._(channel, _argState);
   }
 
