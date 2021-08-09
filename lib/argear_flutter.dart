@@ -17,6 +17,7 @@ class ARGearPreview extends StatefulWidget {
     required this.apiKey,
     required this.apiSecretKey,
     required this.apiAuthKey,
+    required this.loadingWidget,
   }) : super(key: key);
 
   final ARGearCallback argearCallback;
@@ -26,12 +27,14 @@ class ARGearPreview extends StatefulWidget {
   final String apiKey;
   final String apiSecretKey;
   final String apiAuthKey;
+  final Widget loadingWidget;
 
   @override
   createState() => _ARGearState();
 }
 
 class _ARGearState extends State<ARGearPreview> {
+  var loading = true;
   // ignore: unused_field
   late ARGearController _controller;
 
@@ -39,6 +42,9 @@ class _ARGearState extends State<ARGearPreview> {
     final controller = await ARGearController.init(id, this);
     widget.argearCallback(controller);
     _controller = controller;
+    setState(() {
+      loading = false;
+    });
   }
 
   void onVideoRecorded(String path) {
@@ -61,11 +67,16 @@ class _ARGearState extends State<ARGearPreview> {
       'apiAuthKey': widget.apiAuthKey,
     };
 
-    return UiKitView(
-      viewType: channelName,
-      onPlatformViewCreated: _onPlatformViewCreated,
-      creationParams: args,
-      creationParamsCodec: const StandardMessageCodec(),
+    return Stack(
+      children: [
+        UiKitView(
+          viewType: channelName,
+          onPlatformViewCreated: _onPlatformViewCreated,
+          creationParams: args,
+          creationParamsCodec: const StandardMessageCodec(),
+        ),
+        if (loading) widget.loadingWidget
+      ],
     );
   }
 }

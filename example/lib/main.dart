@@ -40,6 +40,7 @@ class Home extends HookWidget {
           apiKey: apiKey,
           apiSecretKey: apiSecretKey,
           apiAuthKey: apiAuthKey,
+          loadingWidget: const Center(child: Text('....loading')),
           onVideoRecorded: (path) {
             Navigator.of(context).push(
               MaterialPageRoute<PreviewPage>(
