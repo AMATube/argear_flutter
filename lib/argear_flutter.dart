@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -40,7 +41,7 @@ class _ARGearState extends State<ARGearPreview> {
 
   Future<void> _onPlatformViewCreated(int id) async {
     final controller = await ARGearController.init(id, this);
-    controller.setUp();
+    // await compute(controller.setUp(), null);
     widget.argearCallback(controller);
     _controller = controller;
   }
