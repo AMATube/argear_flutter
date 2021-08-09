@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 typedef ARGearCallback = void Function(ARGearController controller);
 typedef OnVideoRecorded = void Function(String path);
 typedef OnSetUpCompleted = void Function();
+typedef OnViewCreated = void Function();
 
 const channelName = 'plugins.flutter.io/argear_flutter';
 
@@ -15,6 +16,7 @@ class ARGearPreview extends StatefulWidget {
     required this.argearCallback,
     required this.onVideoRecorded,
     required this.onSetUpCompleted,
+    required this.onViewCreated,
     required this.defaultFilterItemId,
     required this.apiHost,
     required this.apiKey,
@@ -25,6 +27,7 @@ class ARGearPreview extends StatefulWidget {
   final ARGearCallback argearCallback;
   final OnVideoRecorded onVideoRecorded;
   final OnSetUpCompleted onSetUpCompleted;
+  final OnViewCreated onViewCreated;
   final String defaultFilterItemId;
   final String apiHost;
   final String apiKey;
@@ -41,9 +44,9 @@ class _ARGearState extends State<ARGearPreview> {
 
   Future<void> _onPlatformViewCreated(int id) async {
     final controller = await ARGearController.init(id, this);
-    // await compute(controller.setUp(), null);
     widget.argearCallback(controller);
     _controller = controller;
+    widget.onViewCreated();
   }
 
   void onVideoRecorded(String path) {

@@ -29,8 +29,14 @@ class Home extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewCreatedState = useState(false);
     final loadingState = useState(true);
-    print('start build');
+
+    useEffect(() {
+      if (viewCreatedState.value && argearController != null) {
+        argearController?.setUp();
+      }
+    }, [viewCreatedState.value]);
 
     return Scaffold(
       body: Stack(children: [
@@ -40,6 +46,9 @@ class Home extends HookWidget {
           apiKey: apiKey,
           apiSecretKey: apiSecretKey,
           apiAuthKey: apiAuthKey,
+          onViewCreated: () {
+            viewCreatedState.value = true;
+          },
           onSetUpCompleted: () {
             loadingState.value = false;
           },

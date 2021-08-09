@@ -106,11 +106,9 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
               result("ok")
             }
         }
-				print("yukimat end init")
     }
 
     func view() -> UIView {
-			  print("yukimat return view")
         return _view
     }
     
