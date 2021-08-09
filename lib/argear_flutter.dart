@@ -47,12 +47,8 @@ class _ARGearState extends State<ARGearPreview> {
 
   @override
   void dispose() {
-    destroySession() async {
-      await _controller.destroySession();
-      super.dispose();
-    }
-
-    destroySession();
+    super.dispose();
+    _controller.destroySession();
   }
 
   @override
