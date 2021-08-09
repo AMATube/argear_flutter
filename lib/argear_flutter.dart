@@ -40,9 +40,9 @@ class _ARGearState extends State<ARGearPreview> {
 
   Future<void> _onPlatformViewCreated(int id) async {
     final controller = await ARGearController.init(id, this);
+    controller.setUp();
     widget.argearCallback(controller);
     _controller = controller;
-    await controller.setUp();
   }
 
   void onVideoRecorded(String path) {
