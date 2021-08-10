@@ -237,7 +237,7 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
             guard let _ = self else { return }
         }
 
-        cameraPreviewCALayer.contentsGravity = .resizeAspect//.resizeAspectFill
+        cameraPreviewCALayer.contentsGravity = .resizeAspectFill
         cameraPreviewCALayer.frame = CGRect(x: 0, y: 0, width: arScene.sceneView.frame.size.height, height: arScene.sceneView.frame.size.width)
         cameraPreviewCALayer.contentsScale = UIScreen.main.scale
         _view.layer.insertSublayer(cameraPreviewCALayer, at: 0)
@@ -338,7 +338,6 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
             self.arMedia.setVideoConnection(connection)
         }
         arMedia.setMediaRatio(arCamera.ratio)
-        // arMedia.setVideoBitrate(ARGMediaVideoBitrate(rawValue: self.preferences.videoBitrate) ?? ._4M)
         arMedia.setVideoBitrate(._4M)
     }
     
