@@ -107,6 +107,10 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
                 self.downloadItem()
                 result("ok")
             }
+						if call.method == "pause" {
+              self.argSession?.pause()
+              result("ok")
+            }
             if call.method == "destroy" {
               self.argSession?.destroy()
               result("ok")

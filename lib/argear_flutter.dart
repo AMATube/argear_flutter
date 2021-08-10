@@ -63,7 +63,7 @@ class _ARGearState extends State<ARGearPreview> {
   @override
   void dispose() {
     super.dispose();
-    _controller.destroySession();
+    _controller.pauseSession();
   }
 
   @override
@@ -162,5 +162,9 @@ class ARGearController {
 
   Future<void> destroySession() async {
     channel.invokeMethod<void>('destroy');
+  }
+
+  Future<void> pauseSession() async {
+    channel.invokeMethod<void>('pause');
   }
 }
