@@ -80,11 +80,11 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
                 result("ok")
             }
             if call.method == "addFilter" {
-							if let args = call.arguments as? [String: Any],
+              if let args = call.arguments as? [String: Any],
                   let cacheFilePath = args["cacheFilePath"] as? String,
                   let itemId = args["itemId"] as? String {
                   self.setContents(cacheFilePath: cacheFilePath, itemId: itemId)
-							}
+              }
               result("ok")
             }
             if call.method == "clearBeauty" {
@@ -107,7 +107,7 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
                 self.downloadItem()
                 result("ok")
             }
-						if call.method == "pause" {
+            if call.method == "pause" {
               self.argSession?.pause()
               result("ok")
             }
@@ -186,7 +186,7 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
                       } catch {
                           return
                       }
-											self.channel.invokeMethod("onDownloadItemComplete", arguments: ["zipFileName": suggestedFilename])
+                      self.channel.invokeMethod("onDownloadItemComplete", arguments: ["zipFileName": suggestedFilename])
                   }
               }
               task.resume()
@@ -342,7 +342,17 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
     }
     
     private func startVideoRecording() {
-      self.arMedia.recordVideoStart { sec in }
+      var prevSec: CGFloat = 0.0
+      self.arMedia.recordVideoStart { sec in
+          if (prevSec == 0.0) {
+              prevSec = 0.1
+              self.channel.invokeMethod("onVideoRecording", arguments: ["sec": prevSec])
+          }
+          if (prevSec != sec.rounded(.down)) {
+              prevSec = sec.rounded(.down)
+              self.channel.invokeMethod("onVideoRecording", arguments: ["sec": prevSec])
+          }
+      }
     }
 
     private func stopVideoRecording() {

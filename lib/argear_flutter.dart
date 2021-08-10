@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 
 typedef ARGearCallback = void Function(ARGearController controller);
+typedef OnVideoRecording = void Function(double? sec);
 typedef OnVideoRecorded = void Function(String path);
 typedef OnSetUpCompleted = void Function();
 typedef OnViewCreated = void Function();
@@ -17,6 +18,7 @@ class ARGearPreview extends StatefulWidget {
   const ARGearPreview({
     Key? key,
     required this.argearCallback,
+    required this.onVideoRecording,
     required this.onVideoRecorded,
     required this.onSetUpCompleted,
     required this.onViewCreated,
@@ -28,6 +30,7 @@ class ARGearPreview extends StatefulWidget {
   }) : super(key: key);
 
   final ARGearCallback argearCallback;
+  final OnVideoRecording onVideoRecording;
   final OnVideoRecorded onVideoRecorded;
   final OnSetUpCompleted onSetUpCompleted;
   final OnViewCreated onViewCreated;
@@ -50,6 +53,10 @@ class _ARGearState extends State<ARGearPreview> {
     widget.argearCallback(controller);
     _controller = controller;
     widget.onViewCreated();
+  }
+
+  void onVideoRecording(double? sec) {
+    widget.onVideoRecording(sec);
   }
 
   void onVideoRecorded(String path) {
@@ -100,6 +107,10 @@ class ARGearController {
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
     switch (call.method) {
+      case 'onVideoRecording':
+        final sec = call.arguments['sec'] as double?;
+        _argState.onVideoRecording(sec);
+        break;
       case 'onVideoRecordingComplete':
         final video = call.arguments['video'] as String?;
         if (video == null) {
