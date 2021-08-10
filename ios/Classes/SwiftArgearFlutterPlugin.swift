@@ -196,7 +196,7 @@ class ARGearView: NSObject, FlutterPlatformView, ARGSessionDelegate {
       }
       let zipUrl = "https://privatecontent.argear.io/contents/data/" + self.defaultFilterItemId + ".zip";
 
-      auth.requestSignedUrl(withUrl: zipUrl, itemTitle: "Budapest", itemType: "filter", completion: authCallback)
+      auth.requestSignedUrl(withUrl: zipUrl, itemTitle: "faded", itemType: "filter", completion: authCallback)
   }
     
     private func setContents(cacheFilePath: String, itemId: String) {
