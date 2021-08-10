@@ -50,6 +50,7 @@ class _ARGearState extends State<ARGearPreview> {
 
   Future<void> _onPlatformViewCreated(int id) async {
     final controller = await ARGearController.init(id, this);
+    await controller.startSession();
     widget.argearCallback(controller);
     _controller = controller;
     widget.onViewCreated();
@@ -177,5 +178,9 @@ class ARGearController {
 
   Future<void> pauseSession() async {
     channel.invokeMethod<void>('pause');
+  }
+
+  Future<void> startSession() async {
+    channel.invokeMethod<void>('start');
   }
 }
